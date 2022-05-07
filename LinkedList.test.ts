@@ -1,18 +1,7 @@
 import * as LL from "./LinkedList.ts";
 import { assertEquals } from "https://deno.land/std@0.137.0/testing/asserts.ts";
 import { pipe } from "https://deno.land/x/fun/fns.ts";
-
-const log = <A>(x: A) => {
-  console.log(x);
-  return x;
-};
-
-const retrn = <A>(fn: (arg: A) => void) =>
-  (arg: A) => {
-    fn(arg);
-    return arg;
-  };
-
+import { retrn } from "./utils.ts";
 
 Deno.test("addFirst", () => {
   pipe(
