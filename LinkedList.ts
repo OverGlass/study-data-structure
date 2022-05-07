@@ -127,7 +127,7 @@ export const elemIndex: <A>(x: A) => (xs: LinkedList<A>) => number
 
 export const getByIndex: <A>(x: number) => (xs: LinkedList<A>) => A | undefined
   = x => xs => {
-    let index = 0;
+    const index = 0;
     let current = xs.first
     while (index <= x) {
       current = current?.next || null
