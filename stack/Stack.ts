@@ -13,4 +13,11 @@ export class Stack<T> {
   public isEmpty(): boolean {
     return this.data.isEmpty();
   }
+
+  public peek(): T {
+    if (this.data.isEmpty()) {
+      throw new Error('Stack is empty');
+    }
+    return this.data.peek();
+  }
 }
