@@ -1,15 +1,7 @@
-interface Node<A> {
-  value: A
-  next: Node<A> | null,
-}
-
-interface LinkedList<A> {
-  first: Node<A> | null
-  last: Node<A> | null
-  size: number
-}
-
 class Node<A> implements Node<A> {
+  value: A
+  next: null | Node<A>
+
   constructor(value: A, next: null | Node<A>) {
     this.value = value
     this.next = next
@@ -19,176 +11,186 @@ class Node<A> implements Node<A> {
   }
 }
 
-export const of = <A>(): LinkedList<A> => ({
-  first: null,
-  last: null,
-  size: 0
-})
+export class LinkedList<A> implements LinkedList<A> {
 
-export const addFirst: <A>(x: A) => (xs: LinkedList<A>) => LinkedList<A>
-  = x => xs => {
-    const node = Node.of(x, xs.first);
-    xs.first = node
-    xs.last = xs.last || node
-    xs.size += 1
-    return xs
+  private first: null | Node<A>
+  private last: null | Node<A>
+  private size: number
+
+  // - Constructors ----------------------------------------------------------
+
+  constructor() {
+    this.first = null
+    this.last = null
+    this.size = 0
   }
 
-
-export const addLast: <A>(x: A) => (xs: LinkedList<A>) => LinkedList<A>
-  = x => xs => {
-    const node = Node.of(x, null)
-    if (xs.last) xs.last.next = node
-    xs.first = xs.first || node
-    xs.last = node
-    xs.size += 1
-    return xs
-  }
-
-export const deleteFirst: <A>(xs: LinkedList<A>) => LinkedList<A>
-  = xs => {
-    if (isEmpty(xs)) return xs
-    if (xs.first === xs.last) {
-      xs.first = xs.last = null
-    } else {
-      const second = xs.first?.next || null
-      if (xs.first) xs.first.next = null // clear memory
-      xs.first = second
+  static fromArray<A>(xs: Array<A>) {
+    const list = new LinkedList()
+    for (const x of xs) {
+      list.addLast(x)
     }
-    xs.size -= 1
-    return xs
+    return list
   }
 
-export const deleteLast: <A>(xs: LinkedList<A>) => LinkedList<A>
-  = xs => {
-    if (isEmpty(xs)) return xs
-    if (xs.first === xs.last) {
-      xs.first = xs.last = null
-    } else {
-      const previous = xs.last ? getPrevious(xs.last)(xs) : null
-      if (xs.last) xs.last.next = null // clear memory 
-      xs.last = previous
+  static of<A>(...xs: Array<A>) {
+    return this.fromArray(xs)
+  }
+
+  addFirst(value: A) {
+    const node = Node.of(value, this.first)
+    this.first = node
+    if (this.last === null) {
+      this.last = node
     }
-    xs.size -= 1
-
-    return xs
+    this.size++
+    return this
   }
 
-export const toArray: <A>(xs: LinkedList<A>) => A[]
-  = ({ first }) => {
-    let current = first;
-    const array = []
+  addLast(value: A) {
+    const node = Node.of(value, null)
+    if (this.last === null) this.first = node
+    else this.last.next = node
+    this.last = node
+    this.size++
+    return this
+  }
+
+  // - Iterators --------------------------------------------------------------
+
+  *[Symbol.iterator]() {
+    let current = this.first
     while (current) {
-      array.push(current.value)
+      yield current.value
       current = current.next
     }
-    return array
   }
 
-export const fromArray: <A>(xs: Array<A>) => LinkedList<A>
-  = <A>(xs: A[]) => {
-    const LL = of<A>()
-    xs.forEach((x) => addLast(x)(LL))
-    return LL
+  forEach(f: (x: A) => void) {
+    for (const x of this) {
+      f(x)
+    }
   }
 
-export const map: <A>(fn: (x: A) => A) => (xs: LinkedList<A>) => LinkedList<A>
-  = fn => xs => {
-    let current = xs.first;
+  // - Functor ----------------------------------------------------------------
+
+  map<B>(f: (x: A) => B): LinkedList<B> {
+    const list = new LinkedList<B>()
+    for (const x of this) {
+      list.addLast(f(x))
+    }
+    return list
+  }
+
+  // - Destructors ------------------------------------------------------------
+
+  toArray() {
+    return [...this]
+  }
+
+  removeFirst() {
+    if (this.first === null) throw new Error("Empty list")
+    if (this.first === this.last) this.first = this.last = null
+    else {
+      const second = this.first.next || null
+      this.first.next = null
+      this.first = second
+    }
+    this.size--
+    return this
+  }
+
+  removeLast() {
+    if (this.first === null) throw new Error("Empty list")
+    if (this.first === this.last) this.first = this.last = null
+    else {
+      const previous = this.getPrevious(this.last)
+      this.last = previous
+    }
+    this.size--
+    return this
+  }
+
+  // - Utils ------------------------------------------------------------------
+
+  isEmpty() {
+    return this.first === null
+  }
+
+  private getPrevious(node: Node<A> | null) {
+    let current = this.first
     while (current) {
-      current.value = fn(current.value)
+      if (current.next === node) return current
       current = current.next
     }
-    return xs
+    return null
   }
 
-export const forEach: <A>(fn: (x: A) => unknown) => (xs: LinkedList<A>) => LinkedList<A>
-  = fn => xs => {
-    let current = xs.first;
-    while (current) {
-      fn(current.value)
-      current = current.next
-    }
-    return xs
-  }
-
-export const elemIndex: <A>(x: A) => (xs: LinkedList<A>) => number
-  = x => xs => {
-    let current = xs.first;
-    let indexCount = 0
-    while (current) {
-      if (x === current.value)
-        return indexCount
-      indexCount++
-      current = current.next
+  indexOf(value: A) {
+    let index = 0
+    for (const x of this) {
+      if (x === value) return index
+      index++
     }
     return -1
   }
 
-export const getByIndex: <A>(x: number) => (xs: LinkedList<A>) => A | undefined
-  = x => xs => {
-    const index = 0;
-    let current = xs.first
-    while (index <= x) {
+  contains(value: A) {
+    return this.indexOf(value) !== -1
+  }
+
+  length() {
+    return this.size
+  }
+
+  peek() {
+    if (this.first === null) throw new Error("Empty list")
+    return this.first.value
+  }
+
+  peekLast() {
+    if (this.last === null) throw new Error("Empty list")
+    return this.last.value
+  }
+
+  peekByIndex(index: number) {
+    if (index < 0 || index >= this.size) throw new Error("Index out of range")
+    let current = this.first
+    for (let i = 0; i < index; i++) {
       current = current?.next || null
     }
     return current?.value
   }
 
-export const contain: <A>(x: A) => (xs: LinkedList<A>) => boolean
-  = x => xs => elemIndex(x)(xs) !== -1
-
-export const isEmpty: <A>(xs: LinkedList<A>) => boolean
-  = xs => xs.first === null && xs.last === null
-
-export const reverse: <A>(xs: LinkedList<A>) => LinkedList<A>
-  = <A>(xs: LinkedList<A>) => {
-    if (isEmpty(xs)) return xs
-    let previous = xs.first
-    let current = xs.first?.next
+  reverse() {
+    if (this.first === null) return this
+    let previous = this.first
+    let current = this.first?.next || null
     while (current) {
       const next = current.next
       current.next = previous
       previous = current
       current = next
     }
-
-    xs.last = xs.first
-    if (xs.last) xs.last.next = null
-    xs.first = previous
-
-    return xs
-
-
-  }
-/**
- * [1, 2, 3, 4]
- *  *     *  
- * 
- */
-export const getKthFromEnd: <A>(n: number) => (xs: LinkedList<A>) => A | undefined
-  = n => xs => {
-    if (n <= 0) return xs.last?.value
-    let first = xs.first
-    let second = xs.first
-    for (let i = 0; i < n - 1; i++) {
-      second = second?.next || null
-      if (second === null)
-        throw new Error("nKth too large")
-    }
-    while (second !== xs.last) {
-      first = first?.next || null
-      second = second?.next || null
-    }
-    return first?.value
+    this.last = this.first
+    this.last.next = null
+    this.first = previous
+    return this
   }
 
-const getPrevious: <A> (x: Node<A>) => (xs: LinkedList<A>) => Node<A> | null
-  = x => xs => {
-    let current = xs.first;
-    while (current) {
-      if (current.next === x) return current
-      current = current.next
+  getKthFromLast(k: number) {
+    if (k < 0) throw new Error("Index out of range")
+    let pointerA = this.first
+    let pointerB = this.first
+    for (let i = 0; i < k - 1; i++) {
+      pointerB = pointerB?.next || null
+      if (pointerB === null) throw new Error("Index out of range")
     }
-    return null
+    while (pointerB?.next) {
+      pointerA = pointerA?.next || null
+      pointerB = pointerB?.next || null
+    }
+    return pointerA?.value
   }
+}
+
