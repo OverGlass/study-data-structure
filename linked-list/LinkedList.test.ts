@@ -1,7 +1,7 @@
 import * as LL from "./LinkedList.ts";
 import { assertEquals } from "https://deno.land/std@0.137.0/testing/asserts.ts";
 import { pipe } from "https://deno.land/x/fun@v1.0.0/fns.ts";
-import { retrn } from "./utils.ts";
+import { retrn } from "../utils.ts";
 
 Deno.test("addFirst", () => {
   pipe(
