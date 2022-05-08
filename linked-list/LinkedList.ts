@@ -153,13 +153,6 @@ export class LinkedList<A> implements LinkedList<A> {
     return this.last.value
   }
 
-  pop() {
-    if (this.first === null) throw new Error("Empty list")
-    const value = this.first.value
-    this.removeFirst()
-    return value
-  }
-
   peekByIndex(index: number) {
     if (index < 0 || index >= this.size) throw new Error("Index out of range")
     let current = this.first

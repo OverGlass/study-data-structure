@@ -8,7 +8,9 @@ export class Stack<T> {
     if (this.data.isEmpty()) {
       throw new Error('Stack is empty');
     }
-    return this.data.pop();
+    const head = this.data.peek();
+    this.data.removeFirst();
+    return head
   }
   public isEmpty(): boolean {
     return this.data.isEmpty();
