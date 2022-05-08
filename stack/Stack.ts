@@ -1,16 +1,16 @@
+import { LinkedList } from '../linked-list/LinkedList.ts';
 export class Stack<T> {
-  private data: T[] = [];
+  private data = new LinkedList<T>();
   public push(x: T) {
-    this.data.push(x);
+    this.data.addFirst(x);
   }
   public pop(): T {
-    const popped = this.data.pop();
-    if (popped === undefined) {
-      throw new Error("Empty stack");
+    if (this.data.isEmpty()) {
+      throw new Error('Stack is empty');
     }
-    return popped;
+    return this.data.pop();
   }
   public isEmpty(): boolean {
-    return this.data.length === 0;
+    return this.data.isEmpty();
   }
 }
